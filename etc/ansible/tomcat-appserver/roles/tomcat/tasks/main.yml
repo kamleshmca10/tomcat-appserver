@@ -1,0 +1,43 @@
+---
+- name: Download Tomcat
+  get_url: 
+     url="http://archive.apache.org/dist/tomcat/tomcat-7/v7.0.53/bin/apache-tomcat-7.0.53.tar.gz"
+     dest="/opt/apache-tomcat-7.0.53.tar.gz"
+  tags: download
+
+- name: Extract Tomcat archive
+  unarchive: 
+     src: /opt/apache-tomcat-7.0.53.tar.gz
+     dest: /opt/apache-tomcat-7.0.53
+     remote_src: True
+  tags: unpack
+
+- name: Change ownership of Tomcat installation
+  file: path=/opt/apache-tomcat-7.0.53 owner=tomcat group=tomcat state=directory recurse=yes
+
+- name: Configure Tomcat server
+  template: src=server.xml dest=/opt/apache-tomcat-7.0.53/conf/
+  notify: restart tomcat
+
+- name: Configure Tomcat users
+  template: src=tomcat-users.xml dest=/opt/apache-tomcat-7.0.53/conf/
+  notify: restart tomcat
+
+- name: Install Tomcat init script
+  copy: src=tomcat-initscript.sh dest=/etc/init.d/tomcat mode=0755
+
+- name: Start Tomcat
+  service: name=tomcat state=started enabled=yes
+
+- name: wait for tomcat to start
+  wait_for: port=8080 delay=10
+
+#Hitting tomcat url 
+#- name: open tomcat url
+#  get_url:
+#     url: http://10.0.0.2:8080/manager/
+#     dest: /etc/
+#     url_username: tomcat
+#     url_password: tomcat
+          
+
